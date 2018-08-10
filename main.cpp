@@ -1,9 +1,9 @@
 #include <iostream>
+#include "game.hpp"
 
-using namespace std;
-
-int main(int argc, char *argv[])
+int main()
 {
-  cout << "Hello World!" << endl;
+  Game game;
+  game.run();
   return 0;
 }
