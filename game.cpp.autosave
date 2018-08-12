@@ -52,7 +52,7 @@ void Game::inputPhase() {
         if(mStatus == Status::PLAYING){
             int row = event.mouseButton.y / CELL_SIZE;
             int col = event.mouseButton.x / CELL_SIZE;
-            mBoard.makeMove(row, col, mIsXTurn ? 'X' : 'O');
+            mBoard.tryToMakeMove(row, col, mIsXTurn ? 'X' : 'O');
             if(mIsXTurn){
               if(mBoard.checkForAVictory(row, col, 'X')){
                 std::cout << "X won!!!" << std::endl;

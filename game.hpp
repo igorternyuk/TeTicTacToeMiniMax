@@ -25,11 +25,14 @@ public:
     CELL_SIZE = WINDOW_WIDTH / CELLS_IN_WIDTH,
   };
 private:
+  void newGame();
   void inputPhase();
   void updatePhase();
   void renderingPhase();
   void loadTextures();
   Board mBoard;
+  Status mStatus = Status::PLAYING;
+  bool mIsXTurn = true;
   sf::RenderWindow mWindow;
   TextureManager mTextureManager;
 };

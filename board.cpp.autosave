@@ -22,7 +22,7 @@ const std::vector<std::vector<char> > &Board::board() const
   return mBoard;
 }
 
-bool Board::makeMove(int row, int col, char playerMarker)
+bool Board::tryToMakeMove(int row, int col, char playerMarker)
 {
   if(!areCoordsValid(row, col)){
     return false;
