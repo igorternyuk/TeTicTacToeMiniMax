@@ -5,13 +5,15 @@ CONFIG -= qt
 LIBS += `pkg-config --libs sfml-all`
 SOURCES += main.cpp \
     game.cpp \
-    board.cpp
+    board.cpp \
+    ai.cpp
 
 HEADERS += \
     game.hpp \
     board.hpp \
     resourceindentifiers.hpp \
-    resourcemanager.hpp
+    resourcemanager.hpp \
+    ai.hpp
 
 DISTFILES += \
     resourcemanager.impl

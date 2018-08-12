@@ -10,16 +10,26 @@ Board::Board(int width, int height, int winnigCombination):
 
 void Board::init(int width, int height)
 {
-  mBoard.clear();
-  mBoard.reserve(height);
+  mGrid.clear();
+  mGrid.reserve(height);
   for(size_t row{0u}; row < height; ++row){
-    mBoard.emplace_back(width, ' ');
+    mGrid.emplace_back(width, ' ');
   }
 }
 
-const std::vector<std::vector<char> > &Board::board() const
+const std::vector<std::vector<char> > &Board::grid() const
 {
-  return mBoard;
+  return mGrid;
+}
+
+int Board::lastMoveCol() const
+{
+  return !mHistory.empty() ? mHistory.top().second: 0;
+}
+
+int Board::lastMoveRow() const
+{
+  return !mHistory.empty() ? mHistory.top().first : 0;
 }
 
 bool Board::tryToMakeMove(int row, int col, char playerMarker)
@@ -28,42 +38,51 @@ bool Board::tryToMakeMove(int row, int col, char playerMarker)
     return false;
   }
 
-  if(mBoard[row][col] != ' '){
+  if(mGrid[row][col] != ' '){
     return false;
   }
-  mBoard[row][col] = playerMarker;
+  mGrid[row][col] = playerMarker;
+  mHistory.push(std::make_pair(row, col));
   return true;
 }
 
-bool Board::checkForAVictory(int lastMoveRow, int lastMoveCol,
-                             char playerMarker)
+void Board::undoLastMove()
+{
+  if(!mHistory.empty()){
+    auto lastMove = mHistory.top();
+    mGrid[lastMove.first][lastMove.second] = ' ';
+    mHistory.pop();
+  }
+}
+
+bool Board::checkForAVictory(char playerMarker)
 {
   std::vector<char> horisontalLine;
   std::vector<char> verticalLine;
   std::vector<char> mainDiagonal, secondaryDiagonal;
 
   //Horizontal
-  auto colMin = lastMoveCol - mWinChain;
-  auto colMax = lastMoveCol + mWinChain;
+  auto colMin = lastMoveCol() - mWinChain;
+  auto colMax = lastMoveCol() + mWinChain;
   for(int col = colMin; col < colMax; ++col){
-      if(areCoordsValid(lastMoveRow, col)){
-          horisontalLine.push_back(mBoard[lastMoveRow][col]);
+      if(areCoordsValid(lastMoveRow(), col)){
+          horisontalLine.push_back(mGrid[lastMoveRow()][col]);
       }
   }
 
   //Vertical
-  auto rowMin = lastMoveRow - mWinChain;
-  auto rowMax = lastMoveRow + mWinChain;
+  auto rowMin = lastMoveRow() - mWinChain;
+  auto rowMax = lastMoveRow() + mWinChain;
   for(int row = rowMin; row < rowMax; ++row){
-      if(areCoordsValid(row, lastMoveCol)){
-          verticalLine.push_back(mBoard[row][lastMoveCol]);
+      if(areCoordsValid(row, lastMoveCol())){
+          verticalLine.push_back(mGrid[row][lastMoveCol()]);
       }
   }
 
   //Main diagonal
   for(int row = rowMin, col = colMin; row < rowMax && col < colMax; ++row, ++col){
       if(areCoordsValid(row, col)){
-          mainDiagonal.push_back(mBoard[row][col]);
+          mainDiagonal.push_back(mGrid[row][col]);
       }
   }
 
@@ -71,7 +90,7 @@ bool Board::checkForAVictory(int lastMoveRow, int lastMoveCol,
   for(int row = rowMin, col = colMax; row < rowMax && col > colMin; ++row, --col){
 
       if(areCoordsValid(row, col)){
-          secondaryDiagonal.push_back(mBoard[row][col]);
+          secondaryDiagonal.push_back(mGrid[row][col]);
       }
   }
 
@@ -83,7 +102,7 @@ bool Board::checkForAVictory(int lastMoveRow, int lastMoveCol,
 
 bool Board::checkIfGameOver() const
 {
-  for(auto &line: mBoard){
+  for(auto &line: mGrid){
       auto blankSpotCount = std::count_if(line.begin(), line.end(),
                                           [](char marker){
           return marker == ' ';
@@ -97,14 +116,14 @@ bool Board::checkIfGameOver() const
 
 void Board::clear()
 {
-  for(auto &line: mBoard){
+  for(auto &line: mGrid){
     std::fill(line.begin(), line.end(), ' ');
   }
 }
 
 bool Board::areCoordsValid(int row, int col) const
 {
-  return row >= 0 && row < mBoard.size() && col >= 0 && col < mBoard[row].size();
+  return row >= 0 && row < mGrid.size() && col >= 0 && col < mGrid[row].size();
 }
 
 bool Board::checkRange(const std::vector<char> &line, char playerMarker) const
@@ -122,3 +141,5 @@ bool Board::checkRange(const std::vector<char> &line, char playerMarker) const
   }
   return false;
 }
+
+

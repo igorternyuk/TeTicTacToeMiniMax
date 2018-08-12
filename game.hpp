@@ -2,6 +2,7 @@
 #define GAME_H
 
 #include "board.hpp"
+#include "ai.hpp"
 #include "resourceindentifiers.hpp"
 #include "resourcemanager.hpp"
 
@@ -25,7 +26,7 @@ public:
     CELL_SIZE = WINDOW_WIDTH / CELLS_IN_WIDTH,
   };
 private:
-  void newGame();
+  void newGame(bool multiPlayer);
   void updatePhase();
   void renderingPhase();
   void renderBoard();
@@ -35,13 +36,15 @@ private:
 
   sf::Vector2u getScreenSize() const;
   Board mBoard;
+  AI mAi;
   Status mStatus = Status::PLAYING;
-  bool mIsXTurn = true;
-  bool mDraw = true;
+  bool mMultiplayer { true };
+  bool mIsXTurn { true };
+  bool mDraw { true };
   sf::RenderWindow mWindow;
   TextureManager mTextureManager;
   FontManager mFontManager;
-  std::string mStatusText[Status::COUNT] {"X WON!!!", "O WON!!!", "TIE!!!", ""};
+  std::string mStatusText[COUNT] {"X WON!!!", "O WON!!!", "TIE!!!", ""};
 };
 
 #endif // GAME_H

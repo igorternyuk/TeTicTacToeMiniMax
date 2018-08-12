@@ -2,7 +2,8 @@
 #include <iostream>
 
 Game::Game()
-    : mWindow(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "TicTacToeMiniMax") {
+    : mAi('O'),
+      mWindow(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "TicTacToeMiniMax") {
   auto windowPosition = getScreenSize() - mWindow.getSize();
   mWindow.setPosition(sf::Vector2i(windowPosition.x / 2, windowPosition.y / 2));
   loadTextures();
@@ -19,11 +20,15 @@ void Game::run() {
   }
 }
 
-void Game::newGame()
+void Game::newGame(bool multiPlayer)
 {
   mBoard.clear();
   mStatus = Status::PLAYING;
   mIsXTurn = true;
+  mMultiplayer = multiPlayer;
+  if(!multiPlayer){
+    mAi.setAiPlayer('O');
+  }
   mDraw = true;
 }
 
@@ -38,7 +43,10 @@ void Game::updatePhase() {
         case sf::Keyboard::Return:
           break;
         case sf::Keyboard::N:
-          newGame();
+          newGame(true);
+          break;
+        case sf::Keyboard::M:
+          newGame(false);
           break;
         case sf::Keyboard::Escape:
         case sf::Keyboard::Q:
@@ -56,23 +64,33 @@ void Game::updatePhase() {
             bool moveAccepted = mBoard.tryToMakeMove(row, col, mIsXTurn ? 'X' : 'O');
             if(moveAccepted){
                 if(mIsXTurn){
-                  if(mBoard.checkForAVictory(row, col, 'X')){
+                  if(mBoard.checkForAVictory('X')){
                     std::cout << "X won!!!" << std::endl;
                     mStatus = Status::X_WON;
                   }
                 } else {
-                  if(mBoard.checkForAVictory(row, col, 'O')){
+                  if(mBoard.checkForAVictory('O')){
                     std::cout << "O won!!!" << std::endl;
                     mStatus = Status::O_WON;
                   }
+                }
+
+                if(mMultiplayer){
+                    if(mStatus == Status::PLAYING){
+                      mIsXTurn = !mIsXTurn;
+                    }
+                } else {
+                    mAi.makeMove(this->mBoard);
+                    if(mBoard.checkForAVictory('O')){
+                      std::cout << "AI won!!!" << std::endl;
+                      mStatus = Status::O_WON;
+                    }
                 }
                 if(mStatus == Status::PLAYING && mBoard.checkIfGameOver()){
                    mStatus = Status::TIE;
                    std::cout << "Tie!!!" << std::endl;
                 }
-                if(mStatus == Status::PLAYING){
-                  mIsXTurn = !mIsXTurn;
-                }
+
             } else {
               std::cout << "Illegal move" << std::endl;
             }
@@ -95,17 +113,17 @@ void Game::renderBoard()
   background.setTexture(mTextureManager.get(TextureID::Board));
   background.setPosition(0, 0);
   mWindow.draw(background);
-  auto board = mBoard.board();
-  for(size_t row{0u}; row < board.size(); ++row){
-      for(size_t col{0u}; col < board[row].size(); ++col){
-        if(board[row][col] == ' '){
+  auto grid = mBoard.grid();
+  for(size_t row{0u}; row < grid.size(); ++row){
+      for(size_t col{0u}; col < grid[row].size(); ++col){
+        if(grid[row][col] == ' '){
             continue;
         }
         sf::Sprite spot;
         spot.setPosition(col * CELL_SIZE, row * CELL_SIZE);
-        if(board[row][col] == 'X'){
+        if(grid[row][col] == 'X'){
           spot.setTexture(mTextureManager.get(TextureID::BlueX));
-        } else if(board[row][col] == 'O'){
+        } else if(grid[row][col] == 'O'){
           spot.setTexture(mTextureManager.get(TextureID::RedO));
         }
         mWindow.draw(spot);
@@ -135,8 +153,6 @@ void Game::loadFonts()
 {
   mFontManager.load(FontID::GameStatus, "res/fonts/orbitron-light.ttf");
 }
-
-
 
 sf::Vector2u Game::getScreenSize() const
 {
