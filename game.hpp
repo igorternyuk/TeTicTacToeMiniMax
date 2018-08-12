@@ -14,7 +14,7 @@ class Game
 {
 public:
   explicit Game();
-  enum class Status { X_WON, O_WON, TIE, PLAYING };
+  enum Status { X_WON, O_WON, TIE, PLAYING, COUNT };
   void run();
   enum {
 
@@ -26,15 +26,22 @@ public:
   };
 private:
   void newGame();
-  void inputPhase();
   void updatePhase();
   void renderingPhase();
+  void renderBoard();
+  void renderGameStatus();
   void loadTextures();
+  void loadFonts();
+
+  sf::Vector2u getScreenSize() const;
   Board mBoard;
   Status mStatus = Status::PLAYING;
   bool mIsXTurn = true;
+  bool mDraw = true;
   sf::RenderWindow mWindow;
   TextureManager mTextureManager;
+  FontManager mFontManager;
+  std::string mStatusText[Status::COUNT] {"X WON!!!", "O WON!!!", "TIE!!!", ""};
 };
 
 #endif // GAME_H

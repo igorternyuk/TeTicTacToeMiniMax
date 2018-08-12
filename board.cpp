@@ -22,7 +22,7 @@ const std::vector<std::vector<char> > &Board::board() const
   return mBoard;
 }
 
-bool Board::makeMove(int row, int col, char playerMarker)
+bool Board::tryToMakeMove(int row, int col, char playerMarker)
 {
   if(!areCoordsValid(row, col)){
     return false;
@@ -32,12 +32,12 @@ bool Board::makeMove(int row, int col, char playerMarker)
     return false;
   }
   mBoard[row][col] = playerMarker;
+  return true;
 }
 
 bool Board::checkForAVictory(int lastMoveRow, int lastMoveCol,
                              char playerMarker)
 {
-  std::cout << "Checking for a victory" << std::endl;
   std::vector<char> horisontalLine;
   std::vector<char> verticalLine;
   std::vector<char> mainDiagonal, secondaryDiagonal;
@@ -45,18 +45,12 @@ bool Board::checkForAVictory(int lastMoveRow, int lastMoveCol,
   //Horizontal
   auto colMin = lastMoveCol - mWinChain;
   auto colMax = lastMoveCol + mWinChain;
-  std::cout << "colMin = " << colMin << std::endl;
-  std::cout << "colMax = " << colMax << std::endl;
   for(int col = colMin; col < colMax; ++col){
       if(areCoordsValid(lastMoveRow, col)){
           horisontalLine.push_back(mBoard[lastMoveRow][col]);
       }
   }
-  std::cout << "Horizontal line: " << std::endl;
-  for(auto ch: horisontalLine){
-    std::cout << ch;
-  }
-  std::cout << std::endl;
+
   //Vertical
   auto rowMin = lastMoveRow - mWinChain;
   auto rowMax = lastMoveRow + mWinChain;
@@ -67,50 +61,19 @@ bool Board::checkForAVictory(int lastMoveRow, int lastMoveCol,
   }
 
   //Main diagonal
-  rowMin = lastMoveRow - mWinChain;
-  rowMax = lastMoveRow + mWinChain;
-  colMin = lastMoveCol - mWinChain;
-  colMax = lastMoveCol + mWinChain;
   for(int row = rowMin, col = colMin; row < rowMax && col < colMax; ++row, ++col){
       if(areCoordsValid(row, col)){
           mainDiagonal.push_back(mBoard[row][col]);
       }
   }
 
-  std::cout << "mainDiagonal: " << std::endl;
-  for(auto ch: mainDiagonal){
-    std::cout << ch;
-  }
-  std::cout << std::endl;
-
   //Secondary diagonal
-  std::cout << "secondary Diagonal: " << std::endl;
-  rowMin = lastMoveRow - mWinChain + 1;
-  rowMax = lastMoveRow + mWinChain;
-  colMax = lastMoveCol + mWinChain - 1;
-  colMin = lastMoveCol - mWinChain;
-  std::cout << "rowMin = " << colMin << std::endl;
-  std::cout << "rowMax = " << colMax << std::endl;
-  std::cout << "colMin = " << colMin << std::endl;
-  std::cout << "colMax = " << colMax << std::endl;
   for(int row = rowMin, col = colMax; row < rowMax && col > colMin; ++row, --col){
-      std::cout << "row = " << row << std::endl;
-      std::cout << "col = " << col << std::endl;
+
       if(areCoordsValid(row, col)){
           secondaryDiagonal.push_back(mBoard[row][col]);
       }
   }
-
-  std::cout << "secondaryDiagonal: " << std::endl;
-  for(auto ch: secondaryDiagonal){
-      if(ch == ' '){
-        std::cout << '_';
-      } else {
-        std::cout << ch;
-      }
-
-  }
-  std::cout << std::endl;
 
   return checkRange(horisontalLine, playerMarker)
       || checkRange(verticalLine, playerMarker)
@@ -159,5 +122,3 @@ bool Board::checkRange(const std::vector<char> &line, char playerMarker) const
   }
   return false;
 }
-
-

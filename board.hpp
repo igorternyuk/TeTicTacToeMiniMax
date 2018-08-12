@@ -8,7 +8,7 @@ class Board
 public:
   explicit Board(int width = 3, int height = 3, int winnigCombination = 3);
   const std::vector<std::vector<char> >& board() const;
-  bool makeMove(int row, int col, char playerMarker);
+  bool tryToMakeMove(int row, int col, char playerMarker);
   bool checkForAVictory(int lastMoveRow, int lastMoveCol, char playerMarker);
   bool checkIfGameOver() const;
   void clear();

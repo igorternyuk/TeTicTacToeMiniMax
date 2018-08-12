@@ -3,19 +3,19 @@
 
 Game::Game()
     : mWindow(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "TicTacToeMiniMax") {
-  auto screenWidth = sf::VideoMode::getDesktopMode().width;
-  auto screenHeight = sf::VideoMode::getDesktopMode().height;
-  auto dx = (screenWidth - mWindow.getSize().x) / 2;
-  auto dy = (screenHeight - mWindow.getSize().y) / 2;
-  mWindow.setPosition(sf::Vector2i(dx, dy));
+  auto windowPosition = getScreenSize() - mWindow.getSize();
+  mWindow.setPosition(sf::Vector2i(windowPosition.x / 2, windowPosition.y / 2));
   loadTextures();
+  loadFonts();
 }
 
 void Game::run() {
   while (mWindow.isOpen()) {
-    inputPhase();
     updatePhase();
-    renderingPhase();
+    if(mDraw){
+      renderingPhase();
+      mDraw = false;
+    }
   }
 }
 
@@ -24,9 +24,10 @@ void Game::newGame()
   mBoard.clear();
   mStatus = Status::PLAYING;
   mIsXTurn = true;
+  mDraw = true;
 }
 
-void Game::inputPhase() {
+void Game::updatePhase() {
   sf::Event event;
   while (mWindow.pollEvent(event)) {
     if (event.type == sf::Event::Closed) {
@@ -52,39 +53,48 @@ void Game::inputPhase() {
         if(mStatus == Status::PLAYING){
             int row = event.mouseButton.y / CELL_SIZE;
             int col = event.mouseButton.x / CELL_SIZE;
-            mBoard.makeMove(row, col, mIsXTurn ? 'X' : 'O');
-            if(mIsXTurn){
-              if(mBoard.checkForAVictory(row, col, 'X')){
-                std::cout << "X won!!!" << std::endl;
-                mStatus = Status::X_WON;
-              }
+            bool moveAccepted = mBoard.tryToMakeMove(row, col, mIsXTurn ? 'X' : 'O');
+            if(moveAccepted){
+                if(mIsXTurn){
+                  if(mBoard.checkForAVictory(row, col, 'X')){
+                    std::cout << "X won!!!" << std::endl;
+                    mStatus = Status::X_WON;
+                  }
+                } else {
+                  if(mBoard.checkForAVictory(row, col, 'O')){
+                    std::cout << "O won!!!" << std::endl;
+                    mStatus = Status::O_WON;
+                  }
+                }
+                if(mStatus == Status::PLAYING && mBoard.checkIfGameOver()){
+                   mStatus = Status::TIE;
+                   std::cout << "Tie!!!" << std::endl;
+                }
+                if(mStatus == Status::PLAYING){
+                  mIsXTurn = !mIsXTurn;
+                }
             } else {
-              if(mBoard.checkForAVictory(row, col, 'O')){
-                std::cout << "O won!!!" << std::endl;
-                mStatus = Status::O_WON;
-              }
+              std::cout << "Illegal move" << std::endl;
             }
-            if(mStatus == Status::PLAYING && mBoard.checkIfGameOver()){
-               mStatus = Status::TIE;
-               std::cout << "Tie!!!" << std::endl;
-            }
-            if(mStatus == Status::PLAYING){
-              mIsXTurn = !mIsXTurn;
-            }
+            mDraw = true;
         }
     }
   }
 }
 
-void Game::updatePhase() {
-
-}
-
 void Game::renderingPhase() {
   mWindow.clear(sf::Color::White);
+  renderBoard();
+  renderGameStatus();
+  mWindow.display();
+}
+
+void Game::renderBoard()
+{
   sf::Sprite background;
   background.setTexture(mTextureManager.get(TextureID::Board));
   background.setPosition(0, 0);
+  mWindow.draw(background);
   auto board = mBoard.board();
   for(size_t row{0u}; row < board.size(); ++row){
       for(size_t col{0u}; col < board[row].size(); ++col){
@@ -101,8 +111,17 @@ void Game::renderingPhase() {
         mWindow.draw(spot);
       }
   }
-  mWindow.draw(background);
-  mWindow.display();
+}
+
+void Game::renderGameStatus()
+{
+  sf::Text text(mStatusText[mStatus], mFontManager.get(FontID::GameStatus), 100);
+  text.setColor(sf::Color(0,127,0));
+  auto textWidth = text.getGlobalBounds().width;
+  auto textHeight = text.getGlobalBounds().height;
+  text.setPosition((WINDOW_WIDTH - textWidth) / 2,
+                   (WINDOW_HEIGHT - textHeight) / 2 - textHeight / 2);
+  mWindow.draw(text);
 }
 
 void Game::loadTextures()
@@ -110,4 +129,18 @@ void Game::loadTextures()
   mTextureManager.load(TextureID::BlueX, "res/img/blueX.png");
   mTextureManager.load(TextureID::RedO, "res/img/redCircle.png");
   mTextureManager.load(TextureID::Board, "res/img/board.png");
+}
+
+void Game::loadFonts()
+{
+  mFontManager.load(FontID::GameStatus, "res/fonts/orbitron-light.ttf");
+}
+
+
+
+sf::Vector2u Game::getScreenSize() const
+{
+  auto screenWidth = sf::VideoMode::getDesktopMode().width;
+  auto screenHeight = sf::VideoMode::getDesktopMode().height;
+  return sf::Vector2u(screenWidth, screenHeight);
 }
